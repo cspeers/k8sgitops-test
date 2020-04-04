@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foldingathome
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fahclient
+  namespace: foldingathome
+spec:
+  selector:
+    matchLabels:
+      app: fahclient
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: fahclient
+        tier: backend
+    spec:
+      nodeSelector:
+        juju-application: kubernetes-worker
+      containers:     
+      - args:
+        - -v
+        - --gpu=false
+        - --power=full
+        - --gui-enabled=false
+        - --web-enable=true
+        - --command-enable=true
+        - --command-port=36330
+        - --team=47180
+        - --run-as=nobody
+        - --user=AvanadeSV5
+        - --allow=0/0
+        - --web-allow=0/0
+        - --command-allow-no-pass=0/0        
+        command:
+        - /shared/usr/bin/FAHClient
+        image: ubuntu:bionic
+        name: fahclient
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 65534
+        ports:
+            - name: web-ui
+              containerPort: 7396
+            - name: daemon
+              containerPort: 36330
+        resources:
+            limits:
+              memory: "8Gi"
+              cpu: "12"
+            requests:
+              cpu: "800m"
+        volumeMounts:
+        - mountPath: /shared
+          name: shared
+        workingDir: /shared/usr/bin/
+      initContainers:
+      - args:
+        - -c
+        - apt update && apt install -y wget && wget https://download.foldingathome.org/releases/public/release/fahclient/debian-testing-64bit/$(major_version)/$(package_name)
+          && dpkg -x $(package_name) /shared/ && touch /shared/usr/bin/log.txt &&
+          chown -R 65534:65534 /shared
+        command:
+        - /bin/sh
+        env:
+        - name: major_version
+          value: v7.4
+        - name: package_name
+          value: fahclient_7.4.4_amd64.deb
+        image: ubuntu:bionic
+        name: install-fah
+        resources:
+          limits:
+            cpu: "1"
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /shared
+          name: shared
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      volumes:
+      - emptyDir: {}
+        name: shared
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fahclient
+  namespace: foldingathome
+spec:
+  selector:
+    app: fahclient
+    tier: backend
+  ports:
+  - name: web-ui
+    nodePort: 31379
+    port: 7379
+    protocol: TCP
+    targetPort: web-ui
+  - name: daemon
+    nodePort: 31330
+    port: 36330
+    protocol: TCP
+    targetPort: daemon
+  type: NodePort
