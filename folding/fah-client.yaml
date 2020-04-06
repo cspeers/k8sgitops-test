@@ -54,10 +54,10 @@ spec:
               containerPort: 36330
         resources:
             limits:
-              memory: "6Gi"
-              cpu: "14"
+              memory: "4Gi"
+              cpu: "16"
             requests:
-              cpu: "850m"
+              cpu: "900m"
         volumeMounts:
         - mountPath: /shared
           name: shared
