@@ -55,7 +55,7 @@ spec:
         resources:
             limits:
               memory: "8Gi"
-              cpu: "12"
+              cpu: "16"
             requests:
               cpu: "800m"
         volumeMounts:
