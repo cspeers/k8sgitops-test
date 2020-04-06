@@ -57,7 +57,7 @@ spec:
               memory: "8Gi"
               cpu: "16"
             requests:
-              cpu: "800m"
+              cpu: "850m"
         volumeMounts:
         - mountPath: /shared
           name: shared
