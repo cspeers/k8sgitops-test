@@ -55,9 +55,9 @@ spec:
         resources:
             limits:
               memory: "8Gi"
-              cpu: "12"
+              cpu: "16"
             requests:
-              cpu: "900m"
+              cpu: "750m"
         volumeMounts:
         - mountPath: /shared
           name: shared
